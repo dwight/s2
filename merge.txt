@@ -1,0 +1,73 @@
+In mem representation
+
+ns -> map<key,mutation>
+ i.e.
+collection -> map<vloc,mutation>
+index -> map<key,mutation>
+
+mutation:
+  insert x
+  oplog type updates
+  delete
+
+•	goes to oplog quickly
+•	oplog is journaled
+•	rest is not
+
+insert:
+  check for dup keys
+    check inmem
+    check outmem
+  logTheOp(op)
+  setInMem(op)
+
+RESTART
+  load oplog entries that are not merged to inmem
+  so restarts are not slow
+
+OPERATIONS
+
+delete: 
+  if( exists )
+    logTheOp(op)
+    setInMem(op)
+
+update:
+  if( would mutate & dupkeys_ok )
+    logTheOp(op)
+    setInMem(op)
+
+rec -> mutations
+
+insert_mutation
+fullupdate_mutation
+partialupdate_mutation
+delete_mutation
+
+mutations::merge(insert_mutation m)
+  all = m
+
+mutations::merge(fullupdate_mutation m)
+  all = m
+
+mutations::merge(partialupdate_mutation m)
+  long...
+
+mutations::merge(delete_mutation m)
+  all = m
+
+
+MERGING
+  merge time can be long as long as fits in ram
+  fine to work in parallel on different indexes in different
+    merge worker threads
+  work is done per ns for efficiency, not in order of ops
+  some cases short circuit to more efficient e.g.
+     update1, update2, delete -> delete
+     push,push,push -> not too many moves
+  commitIfNeeded goes away
+
+CONCURRENCY
+
+
+
